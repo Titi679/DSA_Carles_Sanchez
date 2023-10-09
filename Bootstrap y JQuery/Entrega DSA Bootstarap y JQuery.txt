@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+  <a class="navbar-brand" href="#">
+    <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="logo" style="width:40px;">
+  </a>
+</nav>
+
+<div class="container">
+  <div class="jumbotron">
+	<h1>Buscador de usuarios de git hub</h1>
+	<p>Los datos que se ofrecen de los usuarios buscados son nombre, descripcion y numero de seguidores</p>
+	<p> Escribe el nombre de usuario para saber su información:</p>
+    <input type="text" class="form-control" id="username" placeholder="Introduce un nombre de usuario">
+	<button id="buscarBtn" class="btn btn-dark">Buscar</button>
+    <div id="errorMensaje" class="text-danger mt-3"></div>
+  </div>
+  
+<h2>Resultados:</h2>
+<table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Usuario</th>
+        <th>Nombre</th>
+        <th>Seguidores</th>
+        <th>Num. Repositorios</th>
+        <th>Avatar</th>
+      </tr>
+    </thead>
+    <tbody id="resultados">
+      <!-- Aquí se mostrarán los resultados de la búsqueda -->
+    </tbody>
+  </table>
+</div>
+
+<script>
+  $(document).ready(function() {
+    $('#buscarBtn').click(function() {
+      var username = $('#username').val();
+      var resultadosTabla = $('#resultados');
+      
+      // Verificar si el cuadro de texto está vacío
+      if (!username) {
+      	$('#errorMensaje').text('Inserte nombre del usuario');
+      	resultadosTabla.empty(); // Limpiar resultados previos
+      	return; // Salir de la función
+      } 
+      else
+      $('#errorMensaje').text(''); // Borrar mensaje de error
+      
+
+      $.ajax({
+        url: 'https://api.github.com/users/' + username,
+        method: 'GET',
+        dataType: 'json',
+        success: function(data) {
+          resultadosTabla.empty(); // Limpiar resultados previos
+                        // Agregar resultados a la tabla
+                        resultadosTabla.append(`
+                            <tr>
+                                <td>${data.name || 'No proporcionado'}</td>
+                                <td>${data.bio || 'No proporcionada'}</td>
+                                <td>${data.followers || 0}</td>
+                                <td>${data.public_repos}</td>
+                                <td><img src="${data.avatar_url}" alt="Foto de perfil" width="100"></td>
+                            </tr>
+                        `);
+                    },
+                    error: function (error) {
+                        $('#errorMensaje').text('El usuario no se encontró en GitHub.');
+                        resultadosTabla.empty(); // Limpiar resultados previos
+        }
+      });
+    });
+  });
+</script>
