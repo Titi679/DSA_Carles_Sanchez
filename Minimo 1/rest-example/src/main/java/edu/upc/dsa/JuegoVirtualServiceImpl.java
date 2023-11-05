@@ -20,7 +20,7 @@ public class JuegoVirtualServiceImpl implements JuegoVirtualService {
     private static final Logger logger = Logger.getLogger(JuegoVirtualServiceImpl.class);
 
 
-    private JuegoVirtualServiceImpl() {
+    public JuegoVirtualServiceImpl() {
         juegos = new ArrayList<>();
         usuarios = new ArrayList<>();
         partidas = new ArrayList<>();
@@ -41,7 +41,7 @@ public class JuegoVirtualServiceImpl implements JuegoVirtualService {
     }
 
     @Override
-    public void iniciarPartida(String idUsuario, String idJuego) {
+    public void iniciarPartida(String idUsuario, String idJuego) throws Exception {
         Usuario usuario = encontrarUsuarioPorID(idUsuario);
         Juego juego = encontrarJuegoPorIdentificador(idJuego);
 
@@ -54,6 +54,7 @@ public class JuegoVirtualServiceImpl implements JuegoVirtualService {
                 logger.info(idUsuario + " ha iniciado una partida en " + idJuego);
             } else if (usuario.getPartidaActual().getJuego() == juego) {
                 logger.error("El usuario ya tiene una partida en curso del mismo juego.");
+                throw new Exception("Partida en cursom");
             } else if (usuario.getPartidaActual().getNivelActual() > 1) {
                 // El usuario ha terminado un juego antes de comenzar otro.
                 Juego juegoAnterior = usuario.getPartidaActual().getJuego();
@@ -63,47 +64,56 @@ public class JuegoVirtualServiceImpl implements JuegoVirtualService {
                 partidas.add(partida);
             } else {
                 logger.error("El usuario no puede comenzar una nueva partida si no ha terminado la anterior.");
+                throw new Exception("Partida en curso");
             }
         } else {
             logger.error("Usuario o juego no encontrado.");
+            throw new Exception("Usuario/Juego no existen");
         }
     }
 
     @Override
-    public String consultarNivelActual(String idUsuario) {
+    public int consultarNivelActual(String idUsuario) throws Exception {
         Usuario usuario = encontrarUsuarioPorID(idUsuario);
         if (usuario != null) {
-            Partida partida = usuario.getPartidaActual();
-            if (partida != null) {
-                return "La partida jugada es la " + usuario.getPartidaActual() +"y esta en el nivel: " + partida.getNivelActual();
+            Partida partidaActual = usuario.getPartidaActual();
+
+            if (partidaActual != null) {
+                int nivelActual = partidaActual.getNivelActual();
+                return nivelActual;
             } else {
-                logger.error("El usuario no tiene una partida en curso.");
+                // Si el usuario no está en una partida en curso, puedes devolver un valor predeterminado o lanzar una excepción.
+                // Por ejemplo, puedes devolver -1 para indicar que no está en una partida.
+                throw new Exception("Usuario no esta en partida");
             }
         } else {
-            logger.error("Usuario no encontrado.");
+            // Si el usuario no se encuentra, puedes devolver otro valor predeterminado o lanzar una excepción.
+            // Por ejemplo, puedes devolver -2 para indicar que el usuario no se encontró.
+            throw new Exception("Usuario no encontrado");
         }
-        return null;
     }
 
+
     @Override
-    public int consultarPuntuacionActual(String nombreUsuario) {
-        Usuario usuario = encontrarUsuarioPorID(nombreUsuario);
+    public int consultarPuntuacionActual(String idUsuario) throws Exception {
+        Usuario usuario = encontrarUsuarioPorID(idUsuario);
         if (usuario != null) {
             Partida partida = usuario.getPartidaActual();
             if (partida != null) {
                 return partida.getPuntuacionAcumulada();
             } else {
                 logger.error("El usuario no tiene una partida en curso.");
+                throw new Exception("El usuario no tiene una partida en curso");
             }
         } else {
             logger.error("Usuario no encontrado.");
+            throw new Exception("Usuario no encontrado");
         }
-        return 0;
     }
 
     @Override
-    public void pasarNivel(String nombreUsuario, int puntos, Date fecha) {
-        Usuario usuario = encontrarUsuarioPorID(nombreUsuario);
+    public void pasarNivel(String idUsuario, int puntos, Date fecha) throws Exception {
+        Usuario usuario = encontrarUsuarioPorID(idUsuario);
 
         if (usuario != null) {
             Partida partida = usuario.getPartidaActual();
@@ -119,43 +129,48 @@ public class JuegoVirtualServiceImpl implements JuegoVirtualService {
                         usuario.sumarPuntuacion(puntos);
 
                         if (nivelActual != partida.getJuego().getNumeroNiveles()) {
-                            logger.info(nombreUsuario + " ha pasado al nivel " + (nivelActual + 1) + " el día " + partida.getFecha());
+                            logger.info(idUsuario + " ha pasado al nivel " + (nivelActual + 1) + " el día " + partida.getFecha());
                         }
                     } else {
                         logger.error("El usuario no tiene suficientes puntos para avanzar al siguiente nivel.");
+                        throw new Exception("El usuario no tiene suficientes puntos para avanzar al siguiente nivel.");
                     }
                 } else {
                     usuario.sumarPuntuacion(100);
                     usuario.setPartidaActual(null);
                     partidas.remove(partida);
-                    logger.info(nombreUsuario + " ha finalizado la partida en " + partida.getJuego().getIdentificador());
+                    logger.info(idUsuario + " ha finalizado la partida en " + partida.getJuego().getIdentificador());
                 }
             } else {
                 logger.error("El usuario no está en una partida en curso.");
+                throw new Exception("El usuario no está en una partida en curso.");
             }
         } else {
             logger.error("Usuario no encontrado.");
+            throw new Exception("Usuario no encontrado");
         }
     }
 
     @Override
-    public void finalizarPartida(String nombreUsuario) {
-        Usuario usuario = encontrarUsuarioPorID(nombreUsuario);
+    public void finalizarPartida(String idUsuario) throws Exception {
+        Usuario usuario = encontrarUsuarioPorID(idUsuario);
         if (usuario != null) {
             Partida partida = usuario.getPartidaActual();
             if (partida != null) {
                 usuario.setPartidaActual(null);
-                logger.info(nombreUsuario + " ha finalizado la partida.");
+                logger.info(idUsuario + " ha finalizado la partida.");
             } else {
                 logger.error("El usuario no tiene una partida en curso.");
+                throw new Exception("El usuario no tiene una partida en curso.");
             }
         } else {
             logger.error("Usuario no encontrado.");
+            throw new Exception("Usuario no encontrado");
         }
     }
 
     @Override
-    public List<Usuario> consultarUsuariosPorPuntuacion(String idJuego) {
+    public List<Usuario> consultarUsuariosPorPuntuacion(String idJuego) throws Exception {
         Juego juego = encontrarJuegoPorIdentificador(idJuego);
 
         if (juego != null) {
@@ -173,21 +188,26 @@ public class JuegoVirtualServiceImpl implements JuegoVirtualService {
             return usuariosDelJuego;
         } else {
             logger.error("Juego no encontrado.");
-            return null;
+            throw new Exception("Juego no encontrado");
         }
     }
 
     @Override
-    public List<Partida> consultarPartidasUsuario(String nombreUsuario) {
-        Usuario usuario = encontrarUsuarioPorID(nombreUsuario);
-        List<Partida> partidasUsuario = new ArrayList<>();
+    public List<Partida> consultarPartidasUsuario(String idUsuario) throws Exception {
+        Usuario usuario = encontrarUsuarioPorID(idUsuario);
         if (usuario != null) {
-            for (Juego juego : juegos) {
-                List<Partida> partidasDeUsuarioEnJuego = juego.getPartidasDeUsuario(usuario);
-                partidasUsuario.addAll(partidasDeUsuarioEnJuego);
+            List<Partida> partidasUsuario = new ArrayList<>();
+            if (usuario != null) {
+                for (Juego juego : juegos) {
+                    List<Partida> partidasDeUsuarioEnJuego = juego.getPartidasDeUsuario(usuario);
+                    partidasUsuario.addAll(partidasDeUsuarioEnJuego);
+                }
             }
+            return partidasUsuario;
+        } else {
+            logger.error("Juego no encontrado.");
+            throw new Exception("Usuario no encontrado");
         }
-        return partidasUsuario;
     }
 
     private String generarIdentificadorUnico() {
@@ -211,10 +231,32 @@ public class JuegoVirtualServiceImpl implements JuegoVirtualService {
         }
         return null;
     }
+
     private int puntosParaSiguienteNivel(int nivelActual, Juego juego) {
         if (nivelActual >= 1 && nivelActual < juego.getNumeroNiveles()) {
             return 1000; // Ejemplo: 1000 puntos para avanzar al siguiente nivel
         }
         return 0;
+    }
+
+    public int getNumeroTotalDeJuegos() {
+        return Juego.getNumeroTotalJuegos();
+    }
+
+    public int getNivelActualPorIdUsuario(String idUsuario) {
+        for (Juego juego : juegos) {
+            List<Partida> partidas = juego.getPartidasDeUsuario(encontrarUsuarioPorID(idUsuario));
+            for (Partida partida : partidas) {
+                if (partida.getUsuario().getIdentificador().equals(idUsuario)) {
+                    return partida.getNivelActual();
+                }
+            }
+        }
+        return -1;
+    }
+    public Usuario crearUsuario(String idUsuario, String nombre) {
+        Usuario usuario = new Usuario(idUsuario, nombre);
+        usuarios.add(usuario); // Asumiendo que tienes una lista de usuarios
+        return usuario;
     }
 }

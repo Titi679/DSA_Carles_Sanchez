@@ -8,12 +8,14 @@ public class Juego {
     private String descripcion;
     private int numeroNiveles;
     private List<Partida> partidas;
+    private static int numeroTotalJuegos = 0;
 
     public Juego(String idJuego, String descripcion, int numeroNiveles) {
         this.idJuego = idJuego;
         this.descripcion = descripcion;
         this.numeroNiveles = numeroNiveles;
         this.partidas = new ArrayList<>();
+        numeroTotalJuegos++;
     }
     public String getIdentificador() {
         return idJuego;
@@ -32,5 +34,8 @@ public class Juego {
     }
     public void agregarPartida(Partida partida) {
         partidas.add(partida);
+    }
+    public static int getNumeroTotalJuegos() {
+        return numeroTotalJuegos;
     }
 }

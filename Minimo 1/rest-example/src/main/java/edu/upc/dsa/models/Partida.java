@@ -14,9 +14,9 @@ public class Partida {
         this.idPartida = idPartida;
         this.juego = juego;
         this.usuario = usuario;
-        this.nivelActual = 1; // Comienza en el primer nivel
+        this.nivelActual = 1;
         this.puntuacionAcumulada = 0;
-        this.fecha = fecha;
+        this.fecha = fechaInicio;
     }
     public Juego getJuego() {
         return juego;
